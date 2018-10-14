@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name" translatable="false">Sleep Timer</string>
+    <string name="settings">Settings</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="minute">minute</string>
+    <string name="minutes">minutes</string>
+    <string name="stop_music">Stop music</string>
+    <string name="turn_off_bluetooth">Turn off bluetooth</string>
+    <string name="turn_off_wifi">Turn off WiFi</string>
+</resources>

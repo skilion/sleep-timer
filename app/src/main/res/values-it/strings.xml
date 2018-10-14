@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">Impostazioni</string>
+    <string name="start">Inizia</string>
+    <string name="stop">Stop</string>
+    <string name="minute">minuto</string>
+    <string name="minutes">minuti</string>
+    <string name="stop_music">Ferma la musica</string>
+    <string name="turn_off_bluetooth">Spegni il bluetooth</string>
+    <string name="turn_off_wifi">Spegni il WiFi</string>
+</resources>
