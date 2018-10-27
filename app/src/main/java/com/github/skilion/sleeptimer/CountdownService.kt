@@ -48,10 +48,10 @@ class CountdownService : Service() {
     }
 
     private fun update() {
-        val seconds = (timeout.time - Date().time).toInt() / 1000;
+        val seconds = (timeout.time - Date().time).toInt() / 1000
         if (seconds >= 0) {
             // build time string of the remaining time
-            var remainingTime = StringBuilder()
+            val remainingTime = StringBuilder()
             if (seconds / 3600 > 0) {
                 remainingTime.append(seconds / 3600)
                 remainingTime.append(":")
@@ -64,7 +64,10 @@ class CountdownService : Service() {
 
             updateNotification()
         } else {
-            sendMediaButton(KeyEvent.KEYCODE_MEDIA_STOP)
+            // timer endend
+            if (SETTING_STOP_MUSIC) sendMediaButton(KeyEvent.KEYCODE_MEDIA_STOP)
+            if (SETTING_TURN_OFF_BLUETOOTH) disableBluetooth()
+            if (SETTING_TURN_OFF_WIFI) disableWifi()
             stopSelf()
         }
     }

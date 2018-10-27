@@ -3,27 +3,26 @@ package com.github.skilion.sleeptimer
 import android.app.AlertDialog
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.PersistableBundle
-import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 import com.devadvance.circularseekbar.CircularSeekBar
 
 
-enum class AppState {
-    STOP,
-    RUNNING
-}
-
 const val NOTIFICATIONS_CHANNEL_ID = "timer_channel"
 
+var SETTING_STOP_MUSIC = true
+var SETTING_TURN_OFF_BLUETOOTH = true
+var SETTING_TURN_OFF_WIFI = true
+
 class MainActivity : AppCompatActivity() {
-    private var appState = AppState.STOP
     private var timer: Timer? = null // timer to update timeText during the countdown
+    private var preferences: SharedPreferences? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,29 +38,33 @@ class MainActivity : AppCompatActivity() {
         settingsButton.setOnClickListener { this.onSettingsButtonClick() }
         timeSeekBar.setOnSeekBarChangeListener(object : CircularSeekBar.OnCircularSeekBarChangeListener {
             override fun onProgressChanged(circularSeekBar: CircularSeekBar?, progress: Int, fromUser: Boolean) {
-                this@MainActivity.updateUI();
+                this@MainActivity.updateUI()
             }
             override fun onStopTrackingTouch(circularSeekBar: CircularSeekBar?) {}
             override fun onStartTrackingTouch(circularSeekBar: CircularSeekBar?) {}
         })
 
         if (countdownServiceRunning) {
-            appState = AppState.RUNNING
             startButton.setText(R.string.stop)
             startUpdateTimer()
         }
 
         updateUI()
+
+        preferences = this.getPreferences(Context.MODE_PRIVATE)
+        SETTING_STOP_MUSIC = preferences?.getBoolean("stop_music", true) ?: true
+        SETTING_TURN_OFF_BLUETOOTH = preferences?.getBoolean("turn_off_bluetooth", false) ?: false
+        SETTING_TURN_OFF_WIFI = preferences?.getBoolean("turn_off_wifi", false) ?: false
     }
 
     override fun onDestroy() {
         super.onDestroy()
         stopUpdateTimer()
     }
+
     private fun onStartButtonClick() {
-        when (appState) {
-            AppState.STOP -> {
-                appState = AppState.RUNNING
+        when (countdownServiceRunning) {
+            false -> {
                 startButton.setText(R.string.stop)
 
                 // start the countdown service
@@ -72,8 +75,7 @@ class MainActivity : AppCompatActivity() {
 
                 startUpdateTimer()
             }
-            AppState.RUNNING -> {
-                appState = AppState.STOP
+            true -> {
                 startButton.setText(R.string.start)
                 stopService(Intent(this, CountdownService::class.java))
                 stopUpdateTimer()
@@ -88,22 +90,42 @@ class MainActivity : AppCompatActivity() {
                 getString(R.string.turn_off_bluetooth),
                 getString(R.string.turn_off_wifi)
         )
-        val checkedItems = booleanArrayOf(true, false, false)
-        builder.setMultiChoiceItems(items, checkedItems, null)
-        builder.setPositiveButton(getString(android.R.string.ok), null)
-        builder.setNegativeButton(getString(android.R.string.cancel), null)
+        val checkedItems = booleanArrayOf(
+                SETTING_STOP_MUSIC,
+                SETTING_TURN_OFF_BLUETOOTH,
+                SETTING_TURN_OFF_WIFI
+        )
+        builder.setMultiChoiceItems(items, checkedItems) { _, option, value ->
+            when (option) {
+                0 -> { SETTING_STOP_MUSIC = value }
+                1 -> { SETTING_TURN_OFF_BLUETOOTH = value }
+                2 -> { SETTING_TURN_OFF_WIFI = value }
+            }
+        }
+        builder.setPositiveButton(getString(android.R.string.ok)) { _, _ ->
+            if (preferences != null) {
+                with(preferences!!.edit()) {
+                    putBoolean("stop_music", SETTING_STOP_MUSIC)
+                    putBoolean("turn_off_bluetooth", SETTING_TURN_OFF_BLUETOOTH)
+                    putBoolean("turn_off_wifi", SETTING_TURN_OFF_WIFI)
+                    apply()
+                }
+            }
+        }
         val alert = builder.create()
         alert.show()
     }
 
     private fun updateUI() {
         if (!countdownServiceRunning) {
-            val timerMinutes = (this.timeSeekBar.progress + 1) * 5;
+            val timerMinutes = (this.timeSeekBar.progress + 1) * 5
             val progressText = timerMinutes.toString() + " " + getString(R.string.minutes)
             timeText.text = progressText
+            startButton.setText(R.string.start)
         } else {
             timeText.text = remainingTimeText
             timeSeekBar.progress = remainingSeconds / 60 / 5
+            startButton.setText(R.string.stop)
         }
     }
 
@@ -114,6 +136,9 @@ class MainActivity : AppCompatActivity() {
                 // only the UI thread can edit the activity appearance
                 this@MainActivity.runOnUiThread {
                     updateUI()
+                    if (!countdownServiceRunning) {
+                        stopUpdateTimer()
+                    }
                 }
             }
         }, 100, 1000)
