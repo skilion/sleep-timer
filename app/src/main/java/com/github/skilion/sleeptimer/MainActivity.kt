@@ -7,11 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 import com.devadvance.circularseekbar.CircularSeekBar
+import com.github.skilion.sleeptimer.databinding.ActivityMainBinding
 
 
 const val NOTIFICATIONS_CHANNEL_ID = "timer_channel"
@@ -21,12 +21,16 @@ var SETTING_TURN_OFF_BLUETOOTH = true
 var SETTING_TURN_OFF_WIFI = true
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+
     private var timer: Timer? = null // timer to update timeText during the countdown
     private var preferences: SharedPreferences? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(NOTIFICATIONS_CHANNEL_ID, "Timer", NotificationManager.IMPORTANCE_LOW)
@@ -34,9 +38,9 @@ class MainActivity : AppCompatActivity() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        startButton.setOnClickListener { this.onStartButtonClick() }
-        settingsButton.setOnClickListener { this.onSettingsButtonClick() }
-        timeSeekBar.setOnSeekBarChangeListener(object : CircularSeekBar.OnCircularSeekBarChangeListener {
+        binding.startButton.setOnClickListener { this.onStartButtonClick() }
+        binding.settingsButton.setOnClickListener { this.onSettingsButtonClick() }
+        binding.timeSeekBar.setOnSeekBarChangeListener(object : CircularSeekBar.OnCircularSeekBarChangeListener {
             override fun onProgressChanged(circularSeekBar: CircularSeekBar?, progress: Int, fromUser: Boolean) {
                 this@MainActivity.updateUI()
             }
@@ -45,7 +49,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         if (countdownServiceRunning) {
-            startButton.setText(R.string.stop)
+            binding.startButton.setText(R.string.stop)
             startUpdateTimer()
         }
 
@@ -65,10 +69,10 @@ class MainActivity : AppCompatActivity() {
     private fun onStartButtonClick() {
         when (countdownServiceRunning) {
             false -> {
-                startButton.setText(R.string.stop)
+                binding.startButton.setText(R.string.stop)
 
                 // start the countdown service
-                val timeout = Date().time + (this.timeSeekBar.progress + 1) * 5 * 60 * 1000
+                val timeout = Date().time + (binding.timeSeekBar.progress + 1) * 5 * 60 * 1000
                 val intent = Intent(this, CountdownService::class.java)
                 intent.putExtra("timeout", timeout)
                 startService(intent)
@@ -76,7 +80,7 @@ class MainActivity : AppCompatActivity() {
                 startUpdateTimer()
             }
             true -> {
-                startButton.setText(R.string.start)
+                binding.startButton.setText(R.string.start)
                 stopService(Intent(this, CountdownService::class.java))
                 stopUpdateTimer()
             }
@@ -118,14 +122,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI() {
         if (!countdownServiceRunning) {
-            val timerMinutes = (this.timeSeekBar.progress + 1) * 5
+            val timerMinutes = (binding.timeSeekBar.progress + 1) * 5
             val progressText = timerMinutes.toString() + " " + getString(R.string.minutes)
-            timeText.text = progressText
-            startButton.setText(R.string.start)
+            binding.timeText.text = progressText
+            binding.startButton.setText(R.string.start)
         } else {
-            timeText.text = remainingTimeText
-            timeSeekBar.progress = remainingSeconds / 60 / 5
-            startButton.setText(R.string.stop)
+            binding.timeText.text = remainingTimeText
+            binding.timeSeekBar.progress = remainingSeconds / 60 / 5
+            binding.startButton.setText(R.string.stop)
         }
     }
 

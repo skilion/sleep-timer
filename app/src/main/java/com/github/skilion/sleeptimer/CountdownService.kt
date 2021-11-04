@@ -6,9 +6,9 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.net.wifi.WifiManager
 import android.os.IBinder
-import android.support.v4.app.NotificationCompat
-import android.support.v4.app.NotificationManagerCompat
-import android.support.v7.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.appcompat.app.AppCompatActivity
 import android.view.KeyEvent
 import java.util.*
 
